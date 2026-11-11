@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101722"><title>Spotify Cue Board</title>
+<style>
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#f5f7fa;background:#0d1420}*{box-sizing:border-box}body{margin:0;padding:env(safe-area-inset-top) max(16px,env(safe-area-inset-right)) env(safe-area-inset-bottom) max(16px,env(safe-area-inset-left));max-width:1320px;margin:auto}header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 0 10px;flex-wrap:wrap}h1{font-size:clamp(1.55rem,4vw,2.35rem);margin:0}h2{font-size:1.05rem;margin:0 0 12px}p{line-height:1.45}.muted,small{color:#a9b5c4}button,input,select{font:inherit}button{border:0;border-radius:14px;padding:13px 16px;cursor:pointer;color:white;background:#324257;font-weight:700}button:active{transform:scale(.98)}button.primary{background:#1db954;color:#08150d}button.warn{background:#bf394c}button.secondary{background:#29384c}.top{display:flex;gap:10px;flex-wrap:wrap}.modebar{display:flex;gap:10px;flex-wrap:wrap;width:100%;margin-top:6px}.modebar button{min-height:48px}section{background:#172233;border:1px solid #2b394c;border-radius:18px;padding:17px;margin:15px 0}.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px}label{display:flex;flex-direction:column;gap:7px;color:#d1dbe7;font-size:.88rem}input,select{width:100%;background:#0d1725;border:1px solid #44566e;color:#fff;border-radius:12px;padding:13px;min-height:48px}input:focus,select:focus{outline:2px solid #1db954}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.cue{border:1px solid #3b4e66;border-radius:22px;background:#223148;overflow:hidden;display:flex;flex-direction:column;min-height:250px;box-shadow:0 8px 24px rgba(0,0,0,.16)}.cue.active{outline:4px solid #1db954}.cue-main{flex:1;text-align:left;background:transparent;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:18px;font-size:1.65rem;line-height:1.1;min-height:190px;padding:24px}.cue-main .play{font-size:1.05rem;letter-spacing:.08em;color:#42d686}.cue-main .name{overflow-wrap:anywhere}.cuefoot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;background:#182539}.cuefoot button{font-size:.95rem;padding:10px 14px}.cuefoot span{font-variant-numeric:tabular-nums;color:#bac8d9;font-size:.95rem}#message{margin:12px 0;min-height:22px;color:#cce7ff}#message.error{color:#ff9baa}.hidden{display:none!important}.help{font-size:.87rem}a{color:#7be6b1}.switch{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.performance-hide{}body.performance-mode section:not(#boardSection):not(#deviceSection),body.performance-mode .header-note{display:none!important}body.performance-mode header{padding-bottom:2px}body.performance-mode #boardSection{background:transparent;border:0;padding:0;margin-top:10px}body.performance-mode #boardSection h2{display:none}body.performance-mode .board{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}body.performance-mode .cue{min-height:300px;border-radius:26px}body.performance-mode .cue-main{font-size:2rem;min-height:235px;padding:30px}body.performance-mode .cue-main .play{font-size:1.15rem}body.performance-mode .cuefoot{padding:12px 16px}body.performance-mode .cuefoot button{font-size:1rem;padding:10px 14px}#deviceSection .actions{align-items:center}.tiny{font-size:.8rem;color:#a9b5c4}@media(min-width:1100px){.board{grid-template-columns:repeat(3,minmax(0,1fr))}body.performance-mode .board{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:820px){.board{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.cue{min-height:220px}.cue-main{font-size:1.4rem;min-height:165px;padding:20px}body.performance-mode .board{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}body.performance-mode .cue{min-height:250px}body.performance-mode .cue-main{font-size:1.6rem;min-height:190px;padding:24px}}@media(max-width:500px){.board{grid-template-columns:1fr;gap:12px}.cue{min-height:200px}.cue-main{padding:18px;font-size:1.25rem;min-height:150px}.cuefoot{padding:8px 10px}.cuefoot button{padding:8px 10px;font-size:.85rem}section{padding:13px}.modebar{gap:8px}body.performance-mode .board{grid-template-columns:1fr;gap:12px}body.performance-mode .cue{min-height:220px}body.performance-mode .cue-main{font-size:1.45rem;min-height:165px;padding:20px}}
+
+/* Rearranging works in Manage Songs mode; playback view stays uncluttered. */
+.cuefoot{flex-wrap:wrap}.cuefoot .drag-handle{touch-action:none;cursor:grab;background:#415571;color:#fff;font-size:1rem;letter-spacing:.02em;user-select:none;-webkit-user-select:none}.cuefoot .drag-handle:active{cursor:grabbing}.cue.dragging{opacity:.45;outline:3px dashed #7be6b1}.cuefoot .move-control{background:#354a65;min-width:40px}.cuefoot .cue-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.cuefoot .cue-time{margin-right:auto}body.performance-mode .cuefoot .drag-handle,body.performance-mode .cuefoot .move-control,body.performance-mode .cuefoot .edit-control,body.performance-mode .cuefoot .delete-control{display:none}.reorder-tip{margin:8px 0;color:#a9b5c4;font-size:.9rem}body.performance-mode .reorder-tip{display:none}.cue.drop-target{outline:4px solid #ffce52;outline-offset:2px}.drag-ghost{position:fixed!important;z-index:9999!important;pointer-events:none!important;opacity:.85!important;transform:rotate(2deg);box-shadow:0 16px 45px #000a!important;overflow:hidden!important}.drag-handle{touch-action:none!important;-webkit-touch-callout:none!important}
+
+/* Adjustable iPad cue button sizing; applies in either view. */
+.size-picker{display:flex;align-items:center;flex-direction:row;gap:9px;font-size:.96rem;font-weight:700;color:#fff}
+.size-picker select{min-height:48px;width:auto;min-width:145px;background:#223148}
+body{--cue-height:250px;--cue-main-height:190px;--cue-font:1.55rem;--cue-pad:22px;--cue-gap:15px;--cue-columns:2}
+body[data-button-size="small"]{--cue-height:116px;--cue-main-height:72px;--cue-font:1rem;--cue-pad:12px;--cue-gap:9px;--cue-columns:4}
+body[data-button-size="medium"]{--cue-height:175px;--cue-main-height:122px;--cue-font:1.25rem;--cue-pad:16px;--cue-gap:12px;--cue-columns:3}
+body[data-button-size="large"]{--cue-height:250px;--cue-main-height:190px;--cue-font:1.55rem;--cue-pad:22px;--cue-gap:15px;--cue-columns:2}
+body[data-button-size="extra"]{--cue-height:340px;--cue-main-height:275px;--cue-font:2rem;--cue-pad:28px;--cue-gap:18px;--cue-columns:1}
+body .board,body.performance-mode .board{grid-template-columns:repeat(var(--cue-columns),minmax(0,1fr));gap:var(--cue-gap)}
+body .cue,body.performance-mode .cue{min-height:var(--cue-height)}
+body .cue-main,body.performance-mode .cue-main{font-size:var(--cue-font);min-height:var(--cue-main-height);padding:var(--cue-pad)}
+body[data-button-size="small"] .cuefoot{padding:6px 8px;gap:4px;flex-wrap:wrap}
+body[data-button-size="small"] .cuefoot button{padding:6px 8px;font-size:.78rem}
+body[data-button-size="small"] .cue-main .play{font-size:.82rem}
+@media(max-width:800px){body[data-button-size="small"]{--cue-columns:3}body[data-button-size="medium"]{--cue-columns:2}}
+@media(max-width:520px){body[data-button-size="small"]{--cue-columns:2}body[data-button-size="medium"]{--cue-columns:2}body[data-button-size="large"]{--cue-columns:1}body[data-button-size="extra"]{--cue-columns:1}}
+
+/* Played indicators appear in every layout, including performance view. */
+.cue.played{position:relative}
+.cue.played .cue-main{filter:saturate(.72)}
+.cue .played-indicator{display:none;position:absolute;right:7px;top:7px;background:#c51f32;color:#ffffff;font-size:.76rem;line-height:1;border-radius:99px;padding:7px 9px;font-weight:800;letter-spacing:.02em;box-shadow:0 1px 4px #0008;pointer-events:none;z-index:2}
+.cue.played .played-indicator{display:block}
+body[data-button-size="small"] .cue .played-indicator{right:3px;top:3px;font-size:.6rem;padding:3px 5px}
+/* Each song has a fade button; it stays accessible in performance view. */
+.cuefoot .fade-control{background:#7550a8;color:#fff;min-width:92px;white-space:nowrap}
+.cuefoot .fade-control:disabled{opacity:.48;cursor:not-allowed}
+.cuefoot .fade-control.fading{background:#a13f68}
+body[data-button-size="small"] .cuefoot .fade-control{min-width:75px}
+/* Individual song-button colours */
+.cue.coloured{background:var(--cue-colour);border-color:var(--cue-colour);color:var(--cue-ink)}
+.cue.coloured .cue-main{color:var(--cue-ink)}
+.cue.coloured .cue-main .play{color:var(--cue-ink);opacity:.9}
+.cue.coloured .cuefoot{background:rgba(0,0,0,.24);color:white}
+.cue.coloured .cuefoot .cue-time{color:#fff}
+.cue.coloured .cuefoot button{background:rgba(0,0,0,.32);color:#fff}
+.cue.coloured.active{outline:4px solid #53ef95;outline-offset:3px}
+.color-field{display:flex;gap:8px;align-items:center;flex-direction:row;flex-wrap:wrap}
+.color-field select{flex:1;min-width:140px}
+.color-field input[type=color]{width:64px;min-width:64px;height:48px;padding:4px;cursor:pointer}
+
+/* Compact 30-cue board: landscape iPad, 6 columns by 5 visible rows. */
+@media (orientation:landscape) and (min-width:900px) and (max-width:1400px){
+ body[data-button-size="small"]{--cue-columns:6;--cue-gap:7px;--cue-height:87px;--cue-main-height:54px;--cue-font:.82rem;--cue-pad:8px}
+ body[data-button-size="small"] .board,body.performance-mode[data-button-size="small"] .board{grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}
+ body[data-button-size="small"] .cue,body.performance-mode[data-button-size="small"] .cue{min-height:0;height:87px;border-radius:11px}
+ body[data-button-size="small"] .cue-main,body.performance-mode[data-button-size="small"] .cue-main{min-height:0;height:58px;gap:3px;padding:7px 9px;font-size:.82rem;line-height:1.1}
+ body[data-button-size="small"] .cue-main .play,body.performance-mode[data-button-size="small"] .cue-main .play{font-size:.65rem}
+ body[data-button-size="small"] .cue-main .name{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+ body[data-button-size="small"] .cuefoot,body.performance-mode[data-button-size="small"] .cuefoot{min-height:29px;padding:2px 5px;gap:2px;flex-wrap:nowrap}
+ body[data-button-size="small"] .cuefoot .cue-time{font-size:.64rem;white-space:nowrap}
+ body[data-button-size="small"] .cuefoot .cue-actions{gap:3px;flex-wrap:nowrap}
+ body[data-button-size="small"] .cuefoot .fade-control,body.performance-mode[data-button-size="small"] .cuefoot .fade-control{min-width:0;font-size:.65rem;padding:5px 6px;border-radius:6px}
+ body.performance-mode[data-button-size="small"] header{padding:5px 0}
+ body.performance-mode[data-button-size="small"] h1{font-size:1.25rem}
+ body.performance-mode[data-button-size="small"] .modebar{margin:0;gap:5px;align-items:center}
+ body.performance-mode[data-button-size="small"] .modebar button{min-height:34px;padding:7px 9px;font-size:.8rem}
+ body.performance-mode[data-button-size="small"] .modebar .tiny{display:none}
+ body.performance-mode[data-button-size="small"] .size-picker select{min-height:34px;padding:5px;font-size:.8rem}
+ body.performance-mode[data-button-size="small"] #deviceSection{padding:6px 10px;margin:4px 0}
+ body.performance-mode[data-button-size="small"] #deviceSection h2,body.performance-mode[data-button-size="small"] #deviceSection .help{display:none}
+ body.performance-mode[data-button-size="small"] #deviceSection .form-grid{display:inline-grid;min-width:230px;vertical-align:middle}
+ body.performance-mode[data-button-size="small"] #deviceSection label{font-size:.7rem;gap:2px}
+ body.performance-mode[data-button-size="small"] #deviceSection select{min-height:34px;padding:5px 8px}
+ body.performance-mode[data-button-size="small"] #deviceSection .actions{display:inline-flex;margin:0 0 0 8px;vertical-align:middle}
+ body.performance-mode[data-button-size="small"] #deviceSection .actions button{padding:7px 9px;font-size:.8rem}
+ body.performance-mode[data-button-size="small"] #boardSection{margin:5px 0}
+}
+
+/* Fixed column counts on both Windows and iPad, regardless of window width. */
+body[data-button-size="small"]{--cue-columns:6;--cue-gap:6px;--cue-height:104px;--cue-main-height:66px;--cue-font:.83rem;--cue-pad:8px}
+body[data-button-size="medium"]{--cue-columns:5;--cue-gap:9px;--cue-height:145px;--cue-main-height:96px;--cue-font:1rem;--cue-pad:12px}
+body[data-button-size="large"]{--cue-columns:4;--cue-gap:12px;--cue-height:192px;--cue-main-height:130px;--cue-font:1.2rem;--cue-pad:16px}
+body[data-button-size="extra"]{--cue-columns:3;--cue-gap:15px;--cue-height:250px;--cue-main-height:185px;--cue-font:1.45rem;--cue-pad:20px}
+body .board,body.performance-mode .board{grid-template-columns:repeat(var(--cue-columns),minmax(0,1fr))!important;gap:var(--cue-gap)!important}
+body .cue,body.performance-mode .cue{height:auto;min-height:var(--cue-height);border-radius:12px}
+body .cue-main,body.performance-mode .cue-main{height:auto;min-height:var(--cue-main-height);padding:var(--cue-pad);font-size:var(--cue-font)}
+body[data-button-size="small"] .cue-main .name{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+body[data-button-size="small"] .cuefoot,body.performance-mode[data-button-size="small"] .cuefoot{min-height:30px;padding:3px 5px;gap:3px;flex-wrap:wrap}
+body[data-button-size="small"] .cuefoot .fade-control{min-width:0;font-size:.67rem;padding:6px 5px}
+body[data-button-size="small"] .cue-main .play{font-size:.7rem}
+#deviceStatus{font-size:.88rem;margin-top:8px;color:#a9e4d0}
+#deviceStatus.warning{color:#ffd27b}
+@media (max-width:600px){body[data-button-size="small"]{--cue-gap:3px;--cue-pad:5px;--cue-font:.67rem;--cue-height:95px}body[data-button-size="medium"]{--cue-gap:5px;--cue-pad:7px;--cue-font:.75rem}body[data-button-size="large"]{--cue-gap:7px;--cue-pad:9px;--cue-font:.85rem}body[data-button-size="extra"]{--cue-gap:9px;--cue-pad:12px;--cue-font:1rem}}
+
+/* Fade feedback must remain visible in Cue Board View as well as Manage Songs. */
+body.performance-mode #message{
+  display:block!important;position:sticky;bottom:0;z-index:30;
+  background:#13253a;border:1px solid #567088;border-radius:10px;
+  padding:10px 12px;margin:10px 0;min-height:40px;font-size:.9rem;
+}
+body.performance-mode #message.error{background:#45202b;color:#ffe1e6;border-color:#db7487}
+
+/* Multi-list navigation: horizontally scrolling tabs stay at screen bottom. */
+body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
+#listDock{position:fixed;left:0;right:0;bottom:0;z-index:60;background:#0c1726;border-top:2px solid #42536d;padding:9px max(12px,env(safe-area-inset-right)) calc(9px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));box-shadow:0 -6px 22px #0008}
+#listDock .dock-row{display:flex;align-items:center;gap:8px;max-width:1320px;margin:auto}
+#listTabs{display:flex;gap:7px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;flex:1;min-width:0;align-items:center;padding:2px 0 5px;-webkit-overflow-scrolling:touch}
+#listTabs button{flex:0 0 auto;white-space:nowrap;font-size:.9rem;min-height:48px;max-width:215px;overflow:hidden;text-overflow:ellipsis;background:#26364d;border:2px solid transparent;padding:10px 13px}
+#listTabs button[aria-selected="true"]{background:#1db954;color:#08150d;border-color:#b2ffcd}
+#addListDock{flex:0 0 auto;white-space:nowrap;background:#304c70;min-height:48px}
+.list-tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.list-tools button{font-size:.9rem}
+body.performance-mode #listDock{display:block!important}
+@media(max-width:620px){#listTabs button{padding:9px 10px;min-height:44px}#addListDock{padding:10px;min-height:44px}}
+</style></head><body>
+<header><div><h1>▶ Spotify Cue Board</h1><div class="muted header-note">Tap a song to start at its saved cue point</div></div><div class="top"><button id="connectBtn" class="primary">Connect Spotify</button><button id="disconnectBtn" class="secondary hidden">Disconnect</button></div><div class="modebar"><button id="showBoardBtn" class="primary">Cue Board View</button><button id="showManageBtn" class="secondary">Manage Songs</button><button id="resetPlayed" class="secondary" type="button" title="Clear the played indicators for all buttons">↻ Reset Played</button><label class="size-picker">Button size <select id="buttonSize" aria-label="Button size"><option value="small">Small</option><option value="medium">Medium</option><option value="large">Large</option><option value="extra">Extra large</option></select></label><span class="tiny">S: 6 columns · M: 5 · L: 4 · XL: 3 — on Windows and iPad.</span></div></header><div id="message" role="status" aria-live="polite"></div>
+<section id="listManager"><h2>My saved cue lists</h2><p class="help">Each tab has its own songs, colours, cue points, order and Played markers. Changes save automatically in this browser. Export a backup to transfer between Windows and iPad.</p><div class="list-tools"><button id="renameList" type="button" class="secondary">Rename current list</button><button id="copyList" type="button" class="secondary">Duplicate list</button><button id="deleteList" type="button" class="warn">Delete current list</button><button id="exportList" type="button" class="primary">Save this list to file</button><button id="exportAllLists" type="button" class="secondary">Back up all lists</button><button id="importAllBtn" type="button" class="secondary">Import lists</button><input id="importAllFile" class="hidden" type="file" accept="application/json,.json"></div><p class="help">Import lists adds them as new tabs. Existing tabs are not deleted. Your original cue list is preserved as “My Cues” when upgrading.</p></section>
+<section id="setupSection"><h2>1. Connect your Spotify Premium account</h2><p class="help">Create a personal app at <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">Spotify Developer Dashboard</a>, then paste the Client ID here. In the Spotify app settings, add the exact Redirect URI displayed below. Host this file on HTTPS (such as GitHub Pages); it won't authenticate reliably when opened as a local file.</p><div class="form-grid"><label>Spotify Client ID<input id="clientId" placeholder="Paste client ID" autocomplete="off"></label><label>Redirect URI (copy into Spotify dashboard)<input id="redirect" readonly></label></div><div class="actions"><button id="copyRedirect">Copy Redirect URI</button><button id="loginBtn" class="primary">Authorise Spotify</button></div><p class="help">Your client ID and cue buttons are stored in this browser. This app uses Spotify's PKCE login; no client secret is needed.</p></section>
+<section id="deviceSection"><h2>2. Choose where Spotify plays</h2><div class="form-grid"><label>Spotify playback device<select id="device"><option value="">Connect to Spotify to load devices</option></select></label></div><div id="deviceStatus" role="status">Select a playback device to check whether fading is supported.</div><div class="actions"><button id="refresh" class="secondary">Reconnect / Refresh devices</button><button type="button" id="ipadHelp" class="secondary">iPad player instructions</button><button id="pause" class="warn">■ Pause / Stop</button></div><p class="help">For iPad playback: open Spotify on the iPad, start any track, then return to this Cue Board and tap Reconnect / Refresh devices. Select the iPad. Keep the Cue Board visible during cues. This page will not silently switch to Windows if the iPad disconnects. A Spotify playback request can still be delayed.</p></section>
+<section id="boardSection"><h2>3. Your cue buttons</h2><p class="reorder-tip">To rearrange: touch and hold ↕ Move, then drag over the button you want to swap positions with. Or tap ◀ / ▶. The order saves automatically.</p><div class="board" id="board"></div><p id="empty" class="muted">No songs yet. Add your first Spotify track below.</p></section>
+<section><h2 id="editorTitle">Add a song button</h2><form id="songForm"><div class="form-grid"><label>Button label<input id="name" placeholder="e.g. Opening music" required maxlength="70"></label><label>Spotify track URL or URI<input id="track" placeholder="https://open.spotify.com/track/..." required></label><label>Start at (mm:ss or hh:mm:ss)<input id="cue" value="0:00" required inputmode="text" placeholder="1:15"></label><label>Button colour<span class="color-field"><select id="colourPreset" aria-label="Button colour"><option value="#223148">Default navy</option><option value="#dc3545">Red</option><option value="#f18729">Orange</option><option value="#f4cb42">Yellow</option><option value="#2aa56a">Green</option><option value="#2379d0">Blue</option><option value="#7a4ed2">Purple</option><option value="#ee77b1">Pink</option><option value="#16a4a7">Teal</option><option value="#e9ebed">White</option><option value="custom">Custom colour…</option></select><input id="colourCustom" type="color" value="#2379d0" title="Choose custom colour" aria-label="Choose custom button colour"></span></label><label>Fade-out duration <select id="fadeSeconds"><option value="0">Off</option><option value="2">2 seconds</option><option value="3" selected>3 seconds</option><option value="5">5 seconds</option><option value="8">8 seconds</option><option value="10">10 seconds</option><option value="15">15 seconds</option><option value="20">20 seconds</option><option value="30">30 seconds</option></select></label><label>Automatic fade starts at (optional, song time)<input id="autoFadeAt" placeholder="e.g. 2:30 or leave blank" inputmode="text"></label></div><div class="actions"><button type="submit" class="primary" id="save">Add cue button</button><button type="button" id="cancelEdit" class="secondary hidden">Cancel edit</button></div></form><p class="help">In Spotify, tap Share → Copy Link, then paste it here. Tap Fade on a playing song to lower its volume and pause at the end. A red Played check appears when the playback request succeeds; Reset Played clears them all. Optionally enter an automatic fade start time (e.g. 2:30 means at 2:30 into that song). Fade timing depends on Spotify and the selected device. Cue points are saved on this device. Example: <b>1:15</b> starts 75 seconds into the track.</p></section>
+<section class="help"><h2>Important limitations</h2><p>This is a personal-use prototype. Spotify device support varies: some devices cannot fade remotely and will pause instead. It does not bypass Spotify Premium, download songs, or provide sample-accurate instant audio. Fade out uses stepped Spotify Connect volume changes, not a locally rendered audio fade. It may be uneven or unavailable on some devices. If volume changes fail, the app still attempts to pause the song. Automatic fade timing requires this page to remain open and active; background iPad tabs can delay it. Spotify may reject playback controls on some devices. iPad volume cannot be controlled directly by browser JavaScript; if Spotify reports supports_volume=false, Fade uses Pause instead. Playback device IDs can expire and must be refreshed. Spotify API quotas and platform policies apply. Do not rely on it for a live show until tested with your specific iPad and output device.</p><div class="actions"><button id="export" class="secondary">Export cue list</button><label style="display:inline-block"><span class="hidden">Import</span><input id="import" type="file" accept="application/json,.json" class="hidden"><button type="button" id="importBtn" class="secondary">Import cue list</button></label></div></section>
+
+<nav id="listDock" aria-label="Saved cue lists"><div class="dock-row"><div id="listTabs" role="tablist" aria-label="Cue lists"></div><button id="addListDock" type="button" title="Create another cue list">+ New list</button></div></nav>
+<script>
+'use strict';
+const $=id=>document.getElementById(id), storeKey='spotify_cue_board_v1', clientKey='spotify_cue_board_client';
+let cues=[], editing=-1, active=-1, token=null, refreshToken=null, expiresAt=0, busy=false;
+let fadeGeneration=0, fadingIndex=-1, fadeRestore=null, knownDevices=[];
+const listsKey='spotify_cue_board_lists_v2';
+let cueLists=[], currentListId='';
+function makeList(name,items=[]){return {id:'list-'+crypto.randomUUID(),name:String(name).trim().slice(0,55)||'Untitled',cues:items}}
+try{
+ const saved=JSON.parse(localStorage.getItem(listsKey)||'null');
+ if(saved&&Array.isArray(saved.lists)&&saved.lists.length){
+  cueLists=saved.lists.filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string'&&Array.isArray(x.cues));
+  currentListId=cueLists.some(x=>x.id===saved.currentId)?saved.currentId:cueLists[0]?.id;
+ }
+}catch{}
+if(!cueLists.length){
+ let legacy=[];try{legacy=JSON.parse(localStorage.getItem(storeKey)||'[]');if(!Array.isArray(legacy))legacy=[]}catch{}
+ cueLists=[makeList('My Cues',legacy)];currentListId=cueLists[0].id;
+}
+cues=cueLists.find(x=>x.id===currentListId).cues;
+$('clientId').value=localStorage.getItem(clientKey)||'';
+$('redirect').value=location.origin+location.pathname;
+const enc=new TextEncoder();
+function message(s,error=false){$('message').textContent=s;$('message').className=error?'error':''}
+function persist(){
+ // Mirror active list to legacy storage for older single-list versions (best effort).
+ localStorage.setItem(listsKey,JSON.stringify({version:2,currentId:currentListId,lists:cueLists}));
+}
+function currentList(){return cueLists.find(x=>x.id===currentListId)}
+function renderTabs(){
+ const tabs=$('listTabs');tabs.replaceChildren();
+ cueLists.forEach(list=>{
+  const button=document.createElement('button');button.type='button';button.textContent=list.name;
+  button.title=list.name+' ('+list.cues.length+' songs)';button.setAttribute('role','tab');
+  button.setAttribute('aria-selected',String(list.id===currentListId));
+  button.addEventListener('click',()=>switchList(list.id));
+  tabs.append(button);
+  if(list.id===currentListId)requestAnimationFrame(()=>button.scrollIntoView({block:'nearest',inline:'nearest'}));
+ });
+}
+function switchList(id){
+ if(!cueLists.some(x=>x.id===id)||id===currentListId)return;
+ if(busy||fadingIndex!==-1){message('Finish current playback or fade command before switching lists.',true);return}
+ cancelFade();resetEdit();active=-1;currentListId=id;cues=currentList().cues;persist();render();renderTabs();
+ message('Opened '+currentList().name+'.');
+}
+function listName(promptText,initial=''){
+ const answer=prompt(promptText,initial);
+ if(answer===null)return null;
+ const val=answer.trim().slice(0,55);
+ if(!val){message('Enter a name for the cue list.',true);return null}
+ return val;
+}
+function downloadJson(data,filename){
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();
+ setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+}
+function sanitizeCues(arr){
+ if(!Array.isArray(arr))throw Error('File does not contain a cue list');
+ return arr.map(c=>{
+  const item={name:String(c.name||'').slice(0,70),uri:uriFrom(c.uri||''),start:Number(c.start),colour:validColour(c.colour),fadeSeconds:fadeDuration(c.fadeSeconds),autoFadeAt:c.autoFadeAt==null?null:Number(c.autoFadeAt),played:c.played===true};
+  if(!item.name||!Number.isSafeInteger(item.start)||item.start<0||(item.autoFadeAt!=null&&(!Number.isSafeInteger(item.autoFadeAt)||item.autoFadeAt<item.start)))throw Error('Invalid cue in imported file');
+  return item;
+ });
+}
+function addNewList(){const name=listName('Name your new cue list:','New cue list');if(name===null)return;const list=makeList(name);cueLists.push(list);switchList(list.id);}
+$('addListDock').onclick=addNewList;
+$('renameList').onclick=()=>{const list=currentList(),name=listName('Rename cue list:',list.name);if(name===null)return;list.name=name;persist();renderTabs();message('Cue list renamed.')};
+$('copyList').onclick=()=>{const original=currentList(),copy=makeList(original.name+' Copy',structuredClone(original.cues));cueLists.push(copy);switchList(copy.id);};
+$('deleteList').onclick=()=>{
+ if(cueLists.length===1){message('Keep at least one cue list. Create another list before deleting this one.',true);return}
+ if(!confirm('Delete "'+currentList().name+'" and all its saved songs from this browser? Export it first if needed.'))return;
+ const index=cueLists.findIndex(l=>l.id===currentListId);cueLists.splice(index,1);
+ cancelFade();resetEdit();active=-1;currentListId=cueLists[Math.max(0,index-1)].id;cues=currentList().cues;persist();render();renderTabs();message('Cue list deleted.');
+};
+$('exportList').onclick=()=>{downloadJson({version:2,name:currentList().name,cues},'spotify-'+currentList().name.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.json');message('Saved current cue list to a file.')};
+$('exportAllLists').onclick=()=>{downloadJson({version:2,lists:cueLists.map(l=>({name:l.name,cues:l.cues}))},'spotify-all-cue-lists.json');message('Downloaded a backup of all cue lists.')};
+$('importAllBtn').onclick=()=>$('importAllFile').click();
+$('importAllFile').onchange=async e=>{
+ try{
+  const file=e.target.files[0];if(!file)return;
+  const parsed=JSON.parse(await file.text());
+  const source=Array.isArray(parsed?.lists)?parsed.lists:[{name:parsed?.name||file.name.replace(/\.json$/i,''),cues:Array.isArray(parsed)?parsed:parsed?.cues}];
+  if(!source.length)throw Error('No cue lists in this file');
+  const incoming=source.map(x=>makeList(String(x.name||'Imported List'),sanitizeCues(x.cues)));
+  cueLists.push(...incoming);persist();switchList(incoming[0].id);
+  message('Imported '+incoming.length+' cue list(s) as new tabs.');
+ }catch(error){message('Import failed: '+error.message,true)}finally{e.target.value=''}
+};
+
+const palette=['#223148','#dc3545','#f18729','#f4cb42','#2aa56a','#2379d0','#7a4ed2','#ee77b1','#16a4a7','#e9ebed'];
+function validColour(value){return typeof value==='string'&&/^#[0-9a-fA-F]{6}$/.test(value)?value.toLowerCase():'#223148'}
+function getColour(){return $('colourPreset').value==='custom'?validColour($('colourCustom').value):validColour($('colourPreset').value)}
+function setColourEditor(colour){const hex=validColour(colour);$('colourCustom').value=hex;$('colourPreset').value=palette.includes(hex)?hex:'custom'}
+function colourInk(hex){const rgb=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);const lum=.2126*rgb[0]+.7152*rgb[1]+.0722*rgb[2];return lum>.30?'#091322':'#ffffff'}
+$('colourCustom').addEventListener('input',()=>{$('colourPreset').value='custom'});
+$('colourPreset').addEventListener('change',()=>{if($('colourPreset').value!=='custom')$('colourCustom').value=$('colourPreset').value});
+
+function fadeDuration(value){const n=Number(value);return [0,2,3,5,8,10,15,20,30].includes(n)?n:3}
+let autoFadeTimer=null, autoFadeSerial=0, lastFadeWarning='';
+function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
+function clearAutomaticFade(){autoFadeSerial++;if(autoFadeTimer!==null){clearTimeout(autoFadeTimer);autoFadeTimer=null}}
+function cancelFade(){fadeGeneration++;fadingIndex=-1;clearAutomaticFade();render()}
+async function spotifyVolume(device,percent){return api('/me/player/volume?device_id='+encodeURIComponent(device)+'&volume_percent='+Math.max(0,Math.min(100,Math.round(percent))),{method:'PUT'})}
+function fadeTimeValue(value){if(value===null||value===undefined||String(value).trim()==='')return null;return cueMs(String(value))}
+function scheduleAutomaticFade(i){
+ clearAutomaticFade();
+ const c=cues[i];if(!c||!fadeDuration(c.fadeSeconds)||c.autoFadeAt==null)return;
+ const remaining=c.autoFadeAt-c.start;
+ const serial=autoFadeSerial;
+ if(remaining<0){message('Auto fade point is before this cue start. Adjust the song settings.',true);return}
+ // Browser timers are best-effort and can be throttled in background tabs.
+ const fire=async()=>{
+  if(serial!==autoFadeSerial||active!==i)return;
+  try{
+   const playback=await api('/me/player');
+   if(serial!==autoFadeSerial||active!==i)return;
+   if(playback?.is_playing&&trackMatches(playback.item,c)&&playback.device?.id===$('device').value){
+    const progress=Number(playback.progress_ms);
+    if(Number.isFinite(progress)&&progress+850<c.autoFadeAt){
+     autoFadeTimer=setTimeout(fire,Math.max(500,Math.min(5000,c.autoFadeAt-progress)));return;
+    }
+    await beginFade(i);
+   }else{message('Auto fade cancelled: selected song is no longer active.',true)}
+  }catch(e){message('Auto fade check failed: '+e.message,true)}
+ };
+ autoFadeTimer=setTimeout(fire,Math.max(250,remaining));
+}
+function trackMatches(item,c){
+ // Spotify can substitute a regionally-licensed version of a track.
+ return !!item && (item.uri===c.uri || item.linked_from?.uri===c.uri || item.id===c.uri.split(':').pop() || item.linked_from?.id===c.uri.split(':').pop());
+}
+async function playingStateFor(c,device){
+ let state=null;
+ // Player state sometimes lags shortly after a cue starts or device switches.
+ for(let attempt=0;attempt<4;attempt++){
+  state=await api('/me/player');
+  if(state?.is_playing && state.device?.id===device && trackMatches(state.item,c))return state;
+  if(attempt<3)await sleep(350);
+ }
+ return state;
+}
+async function beginFade(i){
+ const c=cues[i], seconds=fadeDuration(c?.fadeSeconds);
+ if(!c||seconds===0){message('Fade is disabled for this button. Open Manage Songs → Edit to change it.',true);return}
+ if(fadingIndex!==-1){message('A fade is already running.',true);return}
+ const device=$('device').value;
+ if(!device){message('Select a Spotify playback device first.',true);return}
+ // A manual fade may target a Spotify-relinked version of the requested song.
+ // We trust the last cue triggered *on this board* while guarding the actual
+ // active device and the actual track captured at fade start.
+ const isLastCue=(active===i);
+ clearAutomaticFade();
+ const generation=++fadeGeneration;
+ fadingIndex=i;render();
+ let failure=null, pauseError=null, initialTrack=null, original=null;
+ let shouldPause=false;
+ message('Starting '+seconds+'s fade for '+c.name+'…');
+ try{
+  const state=await playingStateFor(c,device);
+  if(generation!==fadeGeneration)return;
+  if(!state?.is_playing){
+    message('Fade could not start: Spotify does not report active playback. Press Refresh devices and confirm the correct device.',true);return;
+  }
+  if(state.device?.id!==device){
+    message('Fade could not start: music is playing on '+(state.device?.name||'another device')+'. Select that device and try again.',true);return;
+  }
+  if(!trackMatches(state.item,c)&&!isLastCue){
+    message('Fade blocked: '+c.name+' is not the last cue played by this board. Select its Play button first.',true);return;
+  }
+  initialTrack=state.item?.uri||state.item?.id||null;
+  shouldPause=true;
+  original=Number.isFinite(state.device?.volume_percent)?state.device.volume_percent:null;
+  const canFade=state.device?.supports_volume===true&&original!==null;
+  const started=performance.now();
+  if(!canFade){
+    failure='Spotify cannot adjust the volume on '+(state.device?.name||'this device')+'. Pausing instead of fading';
+  }else{
+    fadeRestore={device,volume:original};
+    // Modest request rate reduces volume command failures / Spotify throttling.
+    const steps=seconds<=3?5:Math.min(12,Math.ceil(seconds*1.7));
+    for(let n=1;n<=steps;n++){
+      const targetAt=started+seconds*1000*n/steps;
+      const delay=Math.max(0,targetAt-performance.now());
+      if(delay)await sleep(delay);
+      if(generation!==fadeGeneration)return;
+      const remain=Math.pow(1-n/steps,1.4);
+      try{await spotifyVolume(device,original*remain)}
+      catch(e){failure='Volume command failed: '+e.message;break}
+    }
+    const delay=Math.max(0,started+seconds*1000-performance.now());
+    if(delay)await sleep(delay);
+  }
+ }catch(e){failure='Spotify could not check or fade playback: '+e.message}
+ finally{
+  if(generation===fadeGeneration){
+   if(shouldPause){
+     try{
+       const now=await api('/me/player');
+       // Only pause the track that we observed at fade start; avoids stopping
+       // a new song started while waiting for Spotify's remote volume calls.
+       const nowId=now?.item?.uri||now?.item?.id||null;
+       if(now?.is_playing && now.device?.id===device && initialTrack && nowId===initialTrack){
+         await api('/me/player/pause?device_id='+encodeURIComponent(device),{method:'PUT'});
+         active=-1;
+       }else if(now?.is_playing){
+         failure=(failure?failure+'; ':'')+'Song or playback device changed; did not pause another track';
+       }
+     }catch(e){pauseError=e.message}
+   }
+   fadingIndex=-1;render();
+   if(pauseError)message('Fade ended but pause failed: '+pauseError,true);
+   else if(failure)message('Fade issue: '+failure+'. Playback pause was attempted.',true);
+   else message('Fade completed; playback paused.');
+  }
+ }
+}
+function cueMs(str){const s=str.trim();if(!/^\d+(?::[0-5]?\d){1,2}$/.test(s))throw Error('Enter a time like 0:45, 1:20 or 1:02:30');const p=s.split(':').map(Number);return p.reduce((a,n)=>a*60+n,0)*1000}
+function format(ms){let n=Math.floor(ms/1000),sec=String(n%60).padStart(2,'0'),min=Math.floor(n/60);return `${min}:${sec}`}
+function uriFrom(s){let v=s.trim();if(/^spotify:track:[a-zA-Z0-9]{22}$/.test(v))return v;try{const u=new URL(v);if(u.hostname==='open.spotify.com'||u.hostname==='www.open.spotify.com'){let m=u.pathname.match(/(?:^|\/)track\/([a-zA-Z0-9]{22})(?:\/|$)/);if(m)return 'spotify:track:'+m[1]}}catch{}throw Error('Paste a Spotify track link or spotify:track: URI')}
+function moveCue(from,to){
+ if(to<0||to>=cues.length||from===to)return;
+ const playing=active>=0?cues[active]:null;
+ const selected=editing>=0?cues[editing]:null;
+ const [item]=cues.splice(from,1);cues.splice(to,0,item);
+ active=playing?cues.indexOf(playing):-1;
+ editing=selected?cues.indexOf(selected):-1;
+ persist();render();message('Button order saved.');
+}
+function dragHandle(handle,card){
+ let ghost=null, starting=null, targetIndex=-1;
+ const cleanup=()=>{if(ghost){ghost.remove();ghost=null}document.querySelectorAll('.cue.drop-target').forEach(el=>el.classList.remove('drop-target'));card.classList.remove('dragging')};
+ handle.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='mouse'&&e.button!==0)return;
+  if(e.isPrimary===false)return;
+  e.preventDefault();
+  const from=Number(card.dataset.index);
+  starting={id:e.pointerId,x:e.clientX,y:e.clientY,from,dragging:false};
+  targetIndex=from;
+  try{handle.setPointerCapture(e.pointerId)}catch{}
+ });
+ handle.addEventListener('pointermove',e=>{
+  if(!starting||e.pointerId!==starting.id)return;
+  const dx=e.clientX-starting.x,dy=e.clientY-starting.y;
+  if(!starting.dragging){
+   if(Math.hypot(dx,dy)<8)return;
+   starting.dragging=true;card.classList.add('dragging');
+   ghost=card.cloneNode(true);ghost.classList.remove('dragging');ghost.classList.add('drag-ghost');
+   const r=card.getBoundingClientRect();ghost.style.width=r.width+'px';ghost.style.height=r.height+'px';
+   ghost.style.left=(e.clientX-r.width/2)+'px';ghost.style.top=(e.clientY-40)+'px';document.body.append(ghost);
+  }
+  e.preventDefault();
+  if(ghost){ghost.style.left=(e.clientX-ghost.offsetWidth/2)+'px';ghost.style.top=(e.clientY-40)+'px'}
+  const hit=document.elementFromPoint(e.clientX,e.clientY)?.closest('.cue');
+  document.querySelectorAll('.cue.drop-target').forEach(el=>el.classList.remove('drop-target'));
+  if(hit&&hit.parentNode===$('board')){targetIndex=Number(hit.dataset.index);hit.classList.add('drop-target')}
+ });
+ const finish=e=>{
+  if(!starting||e.pointerId!==starting.id)return;
+  const {from,dragging}=starting;starting=null;
+  try{handle.releasePointerCapture(e.pointerId)}catch{}
+  cleanup();
+  if(e.type!=='pointercancel'&&dragging&&targetIndex!==from)moveCue(from,targetIndex);
+ };
+ handle.addEventListener('pointerup',finish);handle.addEventListener('pointercancel',finish);
+ // Click the handle without dragging: no playback or edit action.
+ handle.addEventListener('click',e=>e.preventDefault());
+}
+function render(){
+ const board=$('board');board.replaceChildren();
+ $('empty').classList.toggle('hidden',cues.length>0);
+ cues.forEach((c,i)=>{
+  const card=document.createElement('div');card.className='cue'+(i===active?' active':'')+(c.played?' played':'');card.dataset.index=String(i);const colour=validColour(c.colour);if(colour!=='#223148'){card.classList.add('coloured');card.style.setProperty('--cue-colour',colour);card.style.setProperty('--cue-ink',colourInk(colour));}
+  const main=document.createElement('button');main.className='cue-main';main.type='button';
+  const play=document.createElement('span');play.className='play';play.textContent='▶ PLAY';
+  const name=document.createElement('strong');name.className='name';name.textContent=c.name;
+  main.append(play,name);main.addEventListener('click',()=>playCue(i));
+  const playedIndicator=document.createElement('span');playedIndicator.className='played-indicator';playedIndicator.textContent='✓ Played';playedIndicator.setAttribute('aria-label','Already played');card.append(playedIndicator);const foot=document.createElement('div');foot.className='cuefoot';
+  const label=document.createElement('span');label.className='cue-time';label.textContent='Cue '+format(c.start);
+  const group=document.createElement('div');group.className='cue-actions';
+  const handle=document.createElement('button');handle.type='button';handle.textContent='↕ Move';handle.className='drag-handle';handle.title='Drag to reorder';handle.setAttribute('aria-label','Drag '+c.name+' to reorder');
+  dragHandle(handle,card);
+  const previous=document.createElement('button');previous.type='button';previous.className='move-control';previous.textContent='◀';previous.title='Move earlier';previous.setAttribute('aria-label','Move '+c.name+' earlier');previous.disabled=i===0;previous.addEventListener('click',()=>moveCue(i,i-1));
+  const next=document.createElement('button');next.type='button';next.className='move-control';next.textContent='▶';next.title='Move later';next.setAttribute('aria-label','Move '+c.name+' later');next.disabled=i===cues.length-1;next.addEventListener('click',()=>moveCue(i,i+1));
+  const fade=document.createElement('button');fade.type='button';fade.className='fade-control'+(fadingIndex===i?' fading':'');fade.textContent=fadingIndex===i?'Fading…':'Fade '+fadeDuration(c.fadeSeconds)+'s';fade.disabled=fadeDuration(c.fadeSeconds)===0||fadingIndex!==-1;fade.title='Fade this playing song and pause';fade.setAttribute('aria-label','Fade out '+c.name);fade.addEventListener('click',()=>beginFade(i));
+  const edit=document.createElement('button');edit.type='button';edit.className='edit-control';edit.textContent='Edit';edit.setAttribute('aria-label','Edit '+c.name);edit.addEventListener('click',()=>startEdit(i));
+  const del=document.createElement('button');del.type='button';del.className='delete-control';del.textContent='×';del.title='Remove cue';del.setAttribute('aria-label','Remove '+c.name);del.addEventListener('click',()=>{if(confirm('Remove '+c.name+'?')){cancelFade();cues.splice(i,1);active=-1;persist();render()}});
+  group.append(fade,handle,previous,next,edit,del);foot.append(label,group);card.append(main,foot);board.append(card);
+ });
+}
+function startEdit(i){editing=i;let c=cues[i];$('editorTitle').textContent='Edit song button';$('name').value=c.name;$('track').value=c.uri;$('cue').value=format(c.start);setColourEditor(c.colour);$('fadeSeconds').value=String(fadeDuration(c.fadeSeconds));$('autoFadeAt').value=c.autoFadeAt==null?'':format(c.autoFadeAt);$('save').textContent='Save changes';$('cancelEdit').classList.remove('hidden');$('songForm').scrollIntoView({behavior:'smooth',block:'center'})}
+function resetEdit(){editing=-1;$('songForm').reset();$('cue').value='0:00';setColourEditor('#223148');$('fadeSeconds').value='3';$('autoFadeAt').value='';$('editorTitle').textContent='Add a song button';$('save').textContent='Add cue button';$('cancelEdit').classList.add('hidden')}
+$('cancelEdit').onclick=resetEdit;
+$('songForm').addEventListener('submit',e=>{e.preventDefault();try{const c={name:$('name').value.trim(),uri:uriFrom($('track').value),start:cueMs($('cue').value),colour:getColour(),fadeSeconds:fadeDuration($('fadeSeconds').value),autoFadeAt:fadeTimeValue($('autoFadeAt').value)};if(c.autoFadeAt!=null&&c.autoFadeAt<c.start)throw Error('Auto fade start must be at or after the song cue point');if(!c.name)throw Error('Enter a button name');if(editing>=0){c.played=!!cues[editing].played;cues[editing]=c}else{c.played=false;cues.push(c)};persist();render();resetEdit();message('Cue saved.')}catch(err){message(err.message,true)}});
+function base64url(buf){return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function randomString(){return base64url(crypto.getRandomValues(new Uint8Array(48)))}
+async function challenge(verifier){return base64url(await crypto.subtle.digest('SHA-256',enc.encode(verifier)))}
+function saveAuth(t){token=t.access_token;refreshToken=t.refresh_token||refreshToken;expiresAt=Date.now()+Number(t.expires_in||3600)*1000;sessionStorage.setItem('spotify_auth',JSON.stringify({token,refreshToken,expiresAt}));updateConnected()}
+function updateConnected(){const connected=!!token;$('connectBtn').classList.toggle('hidden',connected);$('disconnectBtn').classList.toggle('hidden',!connected);$('setupSection').classList.toggle('hidden',connected)}
+async function login(){if(location.protocol!=='https:'&&location.hostname!=='localhost'&&location.hostname!=='127.0.0.1')throw Error('Host this app over HTTPS first.');const id=$('clientId').value.trim();if(!/^[a-zA-Z0-9]{20,80}$/.test(id))throw Error('Enter your Spotify Client ID first.');localStorage.setItem(clientKey,id);const verifier=randomString(),state=randomString();sessionStorage.setItem('spotify_pkce',JSON.stringify({verifier,state}));const q=new URLSearchParams({response_type:'code',client_id:id,scope:'user-modify-playback-state user-read-playback-state',redirect_uri:$('redirect').value,code_challenge_method:'S256',code_challenge:await challenge(verifier),state});location.href='https://accounts.spotify.com/authorize?'+q}
+async function getToken(body){const response=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(body)});const json=await response.json();if(!response.ok)throw Error(json.error_description||json.error||'Spotify login failed');saveAuth(json)}
+async function acceptCallback(){const url=new URL(location.href),code=url.searchParams.get('code'),error=url.searchParams.get('error');if(error){history.replaceState({},'',location.pathname);throw Error('Spotify authorisation: '+error)}if(!code)return;const saved=JSON.parse(sessionStorage.getItem('spotify_pkce')||'null');if(!saved||saved.state!==url.searchParams.get('state'))throw Error('Spotify security check failed. Please connect again.');history.replaceState({},'',location.pathname);sessionStorage.removeItem('spotify_pkce');await getToken({client_id:$('clientId').value.trim(),grant_type:'authorization_code',code,redirect_uri:$('redirect').value,code_verifier:saved.verifier});message('Spotify connected. Select a playback device.');await devices()}
+let refreshingAuth=null;
+async function access(){if(!token)throw Error('Connect Spotify first.');if(Date.now()<expiresAt-60000)return token;if(!refreshToken)throw Error('Spotify session expired. Connect again.');if(!refreshingAuth)refreshingAuth=getToken({grant_type:'refresh_token',refresh_token:refreshToken,client_id:$('clientId').value.trim()}).finally(()=>{refreshingAuth=null});await refreshingAuth;return token}
+async function api(path,options={}){const response=await fetch('https://api.spotify.com/v1'+path,{...options,headers:{'Authorization':'Bearer '+await access(),...(options.body?{'Content-Type':'application/json'}:{}),...(options.headers||{})}});if(response.status===204)return null;if(!response.ok){let detail='';try{const body=await response.json();detail=body.error?.message||body.reason||''}catch{}throw Error('Spotify '+response.status+(detail?' — '+detail:''))}return response.json()}
+let loadingDevices=null;
+async function devices(){
+ const previous=$('device').value || sessionStorage.getItem('spotify_device') || '';
+ const previousName=localStorage.getItem('spotify_cue_device_name')||'';
+ const previousType=localStorage.getItem('spotify_cue_device_type')||'';
+ const response=await api('/me/player/devices');
+ const list=response?.devices||[];
+ knownDevices=list;
+ const sel=$('device');sel.replaceChildren();
+ const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent=list.length?'Choose a device':'No active devices found';sel.append(placeholder);
+ list.forEach(d=>{const option=document.createElement('option');option.value=d.id||'';option.textContent=(d.name||'Device')+' ('+d.type+')'+(d.is_active?' • active':'');sel.append(option)});
+ // A stale iPad Spotify Connect ID must NEVER cause an automatic switch to
+ // the Windows computer. Preserve the explicit user choice by name/type.
+ let chosen=list.find(d=>d.id===previous);
+ if(!chosen && previousName)chosen=list.find(d=>d.name===previousName&&(!previousType||d.type===previousType));
+ if(!chosen && !previousName && list.length===1)chosen=list[0];
+ sel.value=chosen?.id||'';
+ if(chosen){sessionStorage.setItem('spotify_device',chosen.id);saveSelectedDevice(chosen)}
+ showDeviceSupport();
+ if(previousName&&!chosen)message('Your saved device '+previousName+' is offline. Open Spotify on it, play a song briefly and tap Reconnect / Refresh devices. The app will not switch players automatically.',true);
+ else if(!list.length)message('No devices found. Open Spotify on your iPad or Windows computer, play a song briefly, then refresh.',true);
+ else message('Spotify devices refreshed. '+(chosen?'Selected '+chosen.name+'.':'Choose a playback device.'));
+ return chosen;
+}
+function saveSelectedDevice(d){localStorage.setItem('spotify_cue_device_name',d.name||'');localStorage.setItem('spotify_cue_device_type',d.type||'');}
+
+function showDeviceSupport(){
+ const selected=knownDevices.find(d=>d.id===$('device').value),el=$('deviceStatus');
+ if(!selected){el.textContent='Select an active Spotify playback device.';el.className='warning';return}
+ if(selected.is_restricted){el.textContent='⚠ '+selected.name+': Spotify restricts playback commands for this device. Open Spotify on that device.';el.className='warning'}else if(selected.supports_volume!==true){el.textContent='⚠ '+selected.name+': smooth fading is unavailable. This device does not support remote volume fades. Fade will attempt to pause instead. iPad playback remains available for playing songs.';el.className='warning'}
+ else{el.textContent='✓ '+selected.name+': Spotify reports remote volume support. Smooth fade timing is still network-dependent.';el.className=''}
+}
+$('device').addEventListener('change',()=>{cancelFade();sessionStorage.setItem('spotify_device',$('device').value);const chosen=knownDevices.find(d=>d.id===$('device').value);if(chosen)saveSelectedDevice(chosen);showDeviceSupport()});
+async function playCue(i){
+ if(busy)return;cancelFade();const c=cues[i];if(!c)return;
+ busy=true;
+ try{
+  let device=$('device').value;
+  if(!device){await devices();device=$('device').value}
+  if(!device)throw Error('No Spotify device found. Open the Spotify app, start a track briefly, then tap Reconnect / Refresh devices.');
+  message('Starting '+c.name+'…');
+  if(fadeRestore?.device===device){const old=fadeRestore;fadeRestore=null;try{await spotifyVolume(device,old.volume)}catch(e){message('Spotify could not restore the previous volume: '+e.message,true)}}
+  const send=()=>api('/me/player/play?device_id='+encodeURIComponent(device),{method:'PUT',body:JSON.stringify({uris:[c.uri],position_ms:c.start})});
+  try{await send()}catch(err){
+   if(/Spotify 404/.test(err.message)){
+    const refreshed=await devices();
+    if(!refreshed)throw Error('The selected player went offline. Reopen Spotify on that device and retry.');
+    device=refreshed.id;
+    await send();
+   }else throw err;
+  }
+  active=i;c.played=true;persist();render();scheduleAutomaticFade(i);
+  message('Started '+c.name+'. '+(c.autoFadeAt==null?'':'Auto fade near '+format(c.autoFadeAt)+'. ')+'Keep your cue board open.');
+ }catch(err){message('Could not start cue: '+err.message+'. Open Spotify and try Reconnect / Refresh devices.',true)}
+ finally{busy=false}
+}
+$('pause').onclick=async()=>{cancelFade();try{const device=$('device').value;if(!device)throw Error('Choose a device first.');await api('/me/player/pause?device_id='+encodeURIComponent(device),{method:'PUT'});active=-1;render();message('Pause command sent.')}catch(e){message(e.message,true)}};
+$('refresh').onclick=()=>devices().catch(e=>message(e.message,true));
+$('ipadHelp').onclick=()=>message('To play ON the iPad: open Spotify on the iPad, tap Play on any song, return here, refresh devices and choose the iPad. Keep this page visible. For smooth fades, Spotify must report remote volume support.',false);
+let lastResumeRefresh=0;
+async function onResume(){if(document.visibilityState!=='visible'||!token)return;if(Date.now()-lastResumeRefresh<15000)return;lastResumeRefresh=Date.now();try{await devices()}catch(e){message('Spotify connection needs attention: '+e.message+' — tap Reconnect / Refresh devices.',true)}}
+document.addEventListener('visibilitychange',onResume);window.addEventListener('pageshow',()=>{if(token)onResume()});
+$('resetPlayed').onclick=()=>{if(!cues.some(c=>c.played)){message('All buttons are already unplayed.');return}if(!confirm('Reset every song button to unplayed?'))return;cues.forEach(c=>c.played=false);persist();render();message('All buttons reset to unplayed.')};
+$('connectBtn').onclick=()=>{if(token){devices().catch(e=>message(e.message,true))}else login().catch(e=>message(e.message,true))};
+$('loginBtn').onclick=()=>login().catch(e=>message(e.message,true));
+$('copyRedirect').onclick=async()=>{try{await navigator.clipboard.writeText($('redirect').value);message('Redirect URI copied.')}catch{message('Select and copy the URI manually.')}};
+$('disconnectBtn').onclick=()=>{token=null;refreshToken=null;expiresAt=0;sessionStorage.removeItem('spotify_auth');sessionStorage.removeItem('spotify_device');updateConnected();message('Disconnected from this page.')};
+$('export').onclick=()=>$('exportList').click();
+$('importBtn').onclick=()=>$('import').click();
+$('import').onchange=async e=>{
+ try{
+  const file=e.target.files[0];if(!file)return;
+  const parsed=JSON.parse(await file.text());
+  const arr=Array.isArray(parsed)?parsed:parsed.cues;
+  const imported=sanitizeCues(arr);
+  // Import as a new list, never silently overwrite current cues.
+  const list=makeList(parsed.name||file.name.replace(/\.json$/i,''),imported);
+  cueLists.push(list);persist();switchList(list.id);
+  message('Imported '+imported.length+' song buttons into a new cue-list tab.');
+ }catch(err){message(err.message,true)}finally{e.target.value=''}
+};
+
+function setMode(mode){
+  document.body.classList.toggle('performance-mode', mode==='board');
+  localStorage.setItem('spotify_cue_board_mode', mode);
+  $('showBoardBtn').className = mode==='board' ? 'primary' : 'secondary';
+  $('showManageBtn').className = mode==='manage' ? 'primary' : 'secondary';
+}
+function setButtonSize(size){
+  const allowed=['small','medium','large','extra'];
+  const choice=allowed.includes(size)?size:'large';
+  document.body.dataset.buttonSize=choice;
+  $('buttonSize').value=choice;
+  localStorage.setItem('spotify_cue_board_button_size',choice);
+}
+$('buttonSize').addEventListener('change',e=>setButtonSize(e.target.value));
+$('showBoardBtn').onclick=()=>setMode('board');
+$('showManageBtn').onclick=()=>setMode('manage');
+(async()=>{render();renderTabs();persist();setButtonSize(localStorage.getItem('spotify_cue_board_button_size')||'large');setMode(localStorage.getItem('spotify_cue_board_mode')||'manage');try{const auth=JSON.parse(sessionStorage.getItem('spotify_auth')||'null');if(auth){({token,refreshToken,expiresAt}=auth);updateConnected()}await acceptCallback();if(token&&!new URL(location.href).searchParams.has('code'))await devices()}catch(e){message(e.message,true)}})();
+</script></body></html>
